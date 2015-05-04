@@ -1,0 +1,52 @@
+<button onClick="play('sound1')">1</button>
+<br/>
+<button onClick="play('sound2')">2</button>
+<br/>
+<button onClick="play('sound3')">3</button>
+<br/>
+<button onClick="onoff()">on / off</button>
+
+<audio id="sound1" preload="auto">
+  <source src="sounds/sound1.mp3" />
+</audio>
+<audio id="sound2" preload="auto">
+  <source src="sounds/sound2.mp3" />
+</audio>
+<audio id="sound3" preload="auto">
+  <source src="sounds/sound3.mp3" />
+</audio>
+
+<img id="tempo" src="images/droid0.png">
+
+<script>
+function play(audio_id) {
+  document.getElementById(audio_id).currentTime = 0;
+  document.getElementById(audio_id).play();
+}
+
+var sound_on = true;
+function onoff() {
+  sound_on = !sound_on;
+}
+
+var interval_ms = 1000;
+var count = 0;
+function loop() {
+  if (!sound_on) { return; }
+
+  var tempo = document.getElementById("tempo");
+  if (count % 2 == 0) {
+    tempo.src="images/droid0.png";
+  } else {
+    tempo.src="images/droid1.png";
+  }
+
+  if (count % 8 == 0) { play('sound3'); }
+  else if (count % 4 == 0) { play('sound2'); }
+  else if (count % 1 == 0) { play('sound1'); }
+  count += 1;
+}
+
+setInterval(function() { loop(); }, interval_ms);
+
+</script>
