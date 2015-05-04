@@ -16,6 +16,8 @@
   <source src="sounds/sound3.mp3" />
 </audio>
 
+<canvas id="canvas" width="640" height="320"></canvas>
+
 <img id="tempo" src="images/droid0.png">
 
 <script>
@@ -29,22 +31,54 @@ function onoff() {
   sound_on = !sound_on;
 }
 
-var interval_ms = 1000;
+// Tempo class
+Tempo = function(step, offset) {
+  this.offset = offset;
+  this.step = step;
+}
+
+Tempo.prototype.is_active = function(count) {
+  //console.log(count + ", " + this.offset + ", " + this.step);
+  return (count + this.offset) % this.step == 0;
+}
+
+var interval_ms = 100;
 var count = 0;
+var droid0 = new Tempo(20, 0);
+var droid1 = new Tempo(20, 10);
+
+var sound1 = new Tempo(10, 0);
+var sound2 = new Tempo(40, 0);
+var sound3 = new Tempo(80, 0);
+
 function loop() {
   if (!sound_on) { return; }
 
-  var tempo = document.getElementById("tempo");
-  if (count % 2 == 0) {
-    tempo.src="images/droid0.png";
-  } else {
-    tempo.src="images/droid1.png";
+  if (droid0.is_active(count)) {
+    var tempo = document.getElementById("tempo");
+    tempo.src = "images/droid0.png";
+  }
+  if (droid1.is_active(count)) {
+    var tempo = document.getElementById("tempo");
+    tempo.src = "images/droid1.png";
   }
 
-  if (count % 8 == 0) { play('sound3'); }
-  else if (count % 4 == 0) { play('sound2'); }
-  else if (count % 1 == 0) { play('sound1'); }
+  if (sound3.is_active(count)) { play('sound3'); }
+  else if (sound2.is_active(count)) { play('sound2'); }
+  else if (sound1.is_active(count)) { play('sound1'); }
+
+  draw(count);
   count += 1;
+}
+
+function draw(count) {
+  var step = count % 10 + 1;
+  var canvas = document.getElementById("canvas");
+  var context = canvas.getContext('2d');
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.beginPath();
+  context.arc(320, 32 * step, 30, Math.PI*2, false);
+  context.stroke();
 }
 
 setInterval(function() { loop(); }, interval_ms);
