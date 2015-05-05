@@ -66,6 +66,12 @@ function fallen_height(time_ms) {
   );
 }
 
+// Returns a random number from 1 to max_val.
+function random_tempo(max_val, step) {
+  var val = Math.round(Math.random() * max_val);
+  return val - (val % step) + step;
+}
+
 var TOUCH_TIME_MS = 0;
 for (TOUCH_TIME_MS = 0;
   fallen_height(TOUCH_TIME_MS) < FIELD_HEIGHT;
@@ -76,9 +82,9 @@ var count = 0;
 var droid0 = new Tempo(20, 0);
 var droid1 = new Tempo(20, 10);
 
-var sound1 = new Tempo(10, 0);
-var sound2 = new Tempo(10, 5);
-var sound3 = new Tempo(100, 0);
+var drop1 = new Tempo(random_tempo(15, 5), 0);
+var drop2 = new Tempo(random_tempo(20, 5), 5);
+var drop3 = new Tempo(random_tempo(30, 10), 10);
 
 function loop() {
   if (!sound_on) { return; }
@@ -92,9 +98,9 @@ function loop() {
     tempo.src = "images/droid1.png";
   }
 
-  if (sound3.is_active(count)) { play('sound3'); }
-  else if (sound2.is_active(count)) { play('sound2'); }
-  else if (sound1.is_active(count)) { play('sound1'); }
+  if (drop3.is_active(count)) { play('sound3'); }
+  else if (drop2.is_active(count)) { play('sound2'); }
+  else if (drop1.is_active(count)) { play('sound1'); }
 
   draw(count);
   count += 1;
@@ -103,6 +109,8 @@ function loop() {
 function draw_drop(context, count, tempo, x, height) {
   var sequence = tempo.get_sequence(count);
   for (var i = 0; i < sequence.length; ++i) {
+    // By adding INTERVAL_MS to TOUCH_TIME_MS, time_ms can be fully ranged
+    // from 0 to TOUCH_TIME_MS.
     if (INTERVAL_MS * sequence[i] > TOUCH_TIME_MS + INTERVAL_MS) {
       break;
     }
@@ -117,14 +125,18 @@ function draw_drop(context, count, tempo, x, height) {
 }
 
 function draw(count) {
-  var step = count % 10 + 1;
   var canvas = document.getElementById("canvas");
   var context = canvas.getContext('2d');
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  draw_drop(context, count, sound1, 160, 320);
-  draw_drop(context, count, sound2, 320, 320);
-  draw_drop(context, count, sound3, 480, 320);
+  draw_drop(context, count, drop1, 160, 320);
+  draw_drop(context, count, drop2, 320, 320);
+  draw_drop(context, count, drop3, 480, 320);
+
+  context.beginPath();
+  context.fillRect(140, 300, 40, 20);
+  context.fillRect(300, 300, 40, 20);
+  context.fillRect(460, 300, 40, 20);
 }
 
 setInterval(function() { loop(); }, INTERVAL_MS);
