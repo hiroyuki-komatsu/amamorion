@@ -55,14 +55,30 @@ Tempo.prototype.get_sequence = function(count) {
   return sequence;
 }
 
-var interval_ms = 100;
+var INTERVAL_MS = 100;
+var GRAVITY = 9.8;  // meter / sec^2
+var FIELD_HEIGHT = 20;  // meter
+
+function fallen_height(time_ms) {
+  return Math.min(
+    FIELD_HEIGHT,
+    0.5 * GRAVITY * time_ms / 1000 * time_ms / 1000
+  );
+}
+
+var TOUCH_TIME_MS = 0;
+for (TOUCH_TIME_MS = 0;
+  fallen_height(TOUCH_TIME_MS) < FIELD_HEIGHT;
+  TOUCH_TIME_MS += INTERVAL_MS);
+
+
 var count = 0;
 var droid0 = new Tempo(20, 0);
 var droid1 = new Tempo(20, 10);
 
 var sound1 = new Tempo(10, 0);
 var sound2 = new Tempo(10, 5);
-var sound3 = new Tempo(20, 0);
+var sound3 = new Tempo(100, 0);
 
 function loop() {
   if (!sound_on) { return; }
@@ -84,38 +100,33 @@ function loop() {
   count += 1;
 }
 
+function draw_drop(context, count, tempo, x, height) {
+  var sequence = tempo.get_sequence(count);
+  for (var i = 0; i < sequence.length; ++i) {
+    if (INTERVAL_MS * sequence[i] > TOUCH_TIME_MS + INTERVAL_MS) {
+      break;
+    }
+
+    var time_ms = Math.max(0, TOUCH_TIME_MS - INTERVAL_MS * sequence[i]);
+    var y = height * fallen_height(time_ms) / FIELD_HEIGHT;
+
+    context.beginPath();
+    context.arc(x, y, 10, Math.PI*2, false);
+    context.stroke();
+  }
+}
+
 function draw(count) {
   var step = count % 10 + 1;
   var canvas = document.getElementById("canvas");
   var context = canvas.getContext('2d');
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  // sound1
-  var sequence = sound1.get_sequence(count);
-  for (var i = 0; i < sequence.length; ++i) {
-    context.beginPath();
-    context.arc(160, 320 - 3 * sequence[i], 10, Math.PI*2, false);
-    context.stroke();
-  }
-
-  // sound2
-  sequence = sound2.get_sequence(count);
-  for (var i = 0; i < sequence.length; ++i) {
-    context.beginPath();
-    context.arc(320, 320 - 3 * sequence[i], 10, Math.PI*2, false);
-    context.stroke();
-  }
-
-  // sound3
-  sequence = sound3.get_sequence(count);
-  for (var i = 0; i < sequence.length; ++i) {
-    context.beginPath();
-    context.arc(480, 320 - 3 * sequence[i], 10, Math.PI*2, false);
-    context.stroke();
-  }
-
+  draw_drop(context, count, sound1, 160, 320);
+  draw_drop(context, count, sound2, 320, 320);
+  draw_drop(context, count, sound3, 480, 320);
 }
 
-setInterval(function() { loop(); }, interval_ms);
+setInterval(function() { loop(); }, INTERVAL_MS);
 
 </script>
