@@ -1,9 +1,7 @@
-<button onClick="set_sound('sound1')">1</button>
-<br/>
-<button onClick="set_sound('sound2')">2</button>
-<br/>
-<button onClick="set_sound('sound3')">3</button>
-<br/>
+<canvas id="canvas" width="640" height="480"></canvas>
+
+<img id="tempo" src="images/droid0.png"><br />
+
 <button onClick="onoff()">on / off</button>
 
 <audio id="sound1" preload="auto">
@@ -16,9 +14,6 @@
   <source src="sounds/sound3.mp3" />
 </audio>
 
-<canvas id="canvas" width="640" height="320"></canvas>
-
-<img id="tempo" src="images/droid0.png">
 
 <script>
 function play(audio_id) {
@@ -59,6 +54,23 @@ Tempo.prototype.get_sequence = function(count) {
   return sequence;
 }
 
+// Bucket class
+Bucket = function(sound, color, image_src) {
+  this.sound = sound;
+  this.color = color;
+  this.image = new Image();
+  this.image.src = image_src;
+}
+
+var BUCKET_LIST = [
+  new Bucket("sound1", "#F44336",  // Red
+             "images/dish_cup.png"),
+  new Bucket("sound2", "#009688",  // Green
+             "images/dish_owan.png"),
+  new Bucket("sound3", "#3F51B5",  // Blue
+             "images/pot.png")
+]
+
 var INTERVAL_MS = 100;
 var GRAVITY = 9.8;  // meter / sec^2
 var FIELD_HEIGHT = 20;  // meter
@@ -90,9 +102,9 @@ var drop1 = new Tempo(random_tempo(15, 5), 0);
 var drop2 = new Tempo(random_tempo(20, 5), 5);
 var drop3 = new Tempo(random_tempo(30, 10), 10);
 
-var drop1_sound = 'sound1';
-var drop2_sound = 'sound2';
-var drop3_sound = 'sound3';
+var drop1_bucket = 0;
+var drop2_bucket = 1;
+var drop3_bucket = 2;
 
 function loop() {
   if (!sound_on) { return; }
@@ -106,13 +118,16 @@ function loop() {
     tempo.src = "images/droid1.png";
   }
 
-  if (drop3.is_active(count)) { play(drop3_sound); }
-  else if (drop2.is_active(count)) { play(drop2_sound); }
-  else if (drop1.is_active(count)) { play(drop1_sound); }
+  if (drop3.is_active(count)) { play(BUCKET_LIST[drop3_bucket].sound); }
+  if (drop2.is_active(count)) { play(BUCKET_LIST[drop2_bucket].sound); }
+  if (drop1.is_active(count)) { play(BUCKET_LIST[drop1_bucket].sound); }
 
   draw(count);
   count += 1;
 }
+
+var drop_image = new Image();
+drop_image.src = "images/water_shizuku.png";
 
 function draw_drop(context, count, tempo, x, height) {
   var sequence = tempo.get_sequence(count);
@@ -126,30 +141,31 @@ function draw_drop(context, count, tempo, x, height) {
     var time_ms = Math.max(0, TOUCH_TIME_MS - INTERVAL_MS * sequence[i]);
     var y = height * fallen_height(time_ms) / FIELD_HEIGHT;
 
-    context.beginPath();
-    context.arc(x, y, 10, Math.PI*2, false);
-    context.stroke();
+    context.drawImage(drop_image, x - 18, y - 24, 36, 36);
   }
 }
 
-function draw_bucket(context, x, y, color) {
-  context.beginPath();
-  context.fillStyle = color;
-  context.fillRect(x - 20, y - 20, 40, 20);
+function draw_bucket(context, x, y, bucket) {
+  context.drawImage(bucket.image, x - 30, y - 60, 60, 60);
 }
+
+var background_img = new Image();
+background_img.src = "images/background.png";
 
 function draw(count) {
   var canvas = document.getElementById("canvas");
   var context = canvas.getContext('2d');
-  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(background_img, 0, 0, canvas.width, canvas.height);
+  //context.clearRect(0, 0, canvas.width, canvas.height);
 
-  draw_drop(context, count, drop1, 160, 320);
-  draw_drop(context, count, drop2, 320, 320);
-  draw_drop(context, count, drop3, 480, 320);
+  var ground_height = canvas.height * 0.9;
+  draw_drop(context, count, drop1, 160, ground_height);
+  draw_drop(context, count, drop2, 320, ground_height);
+  draw_drop(context, count, drop3, 480, ground_height);
 
-  draw_bucket(context, 160, 320, "#F44336");
-  draw_bucket(context, 320, 320, "#009688");
-  draw_bucket(context, 480, 320, "#3F51B5");
+  draw_bucket(context, 160, ground_height + 20, BUCKET_LIST[drop1_bucket]);
+  draw_bucket(context, 320, ground_height + 20, BUCKET_LIST[drop2_bucket]);
+  draw_bucket(context, 480, ground_height + 20, BUCKET_LIST[drop3_bucket]);
 }
 
 function isIn(clientX, clientY, x, y, width, height) {
@@ -162,17 +178,16 @@ function onTouchEvent(event) {
   var touchX = event.clientX - clientRect.left;
   var touchY = event.clientY - clientRect.top;
 
-  console.log("onTouchEvent: " + event.clientX + ", " + event.clientY);
-  console.log("onTouchEvent: " + touchX + ", " + touchY);
+  var bucket_y = clientRect.height * 0.9 + 20;
 
-  if (isIn(touchX, touchY, 140, 300, 40, 20)) {
-    drop1_sound = "sound3";
+  if (isIn(touchX, touchY, 120, bucket_y - 40, 80, 80)) {
+    drop1_bucket = (drop1_bucket + 1) % BUCKET_LIST.length;
   }
-  if (isIn(touchX, touchY, 300, 300, 40, 20)) {
-    drop2_sound = "sound1";
+  if (isIn(touchX, touchY, 280, bucket_y - 40, 80, 80)) {
+    drop2_bucket = (drop2_bucket + 1) % BUCKET_LIST.length;
   }
-  if (isIn(touchX, touchY, 460, 300, 40, 20)) {
-    drop3_sound = "sound2";
+  if (isIn(touchX, touchY, 440, bucket_y - 40, 80, 80)) {
+    drop3_bucket = (drop3_bucket + 1) % BUCKET_LIST.length;
   }
 }
 
