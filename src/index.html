@@ -1,7 +1,5 @@
 <canvas id="canvas" width="640" height="480"></canvas>
 
-<img id="tempo" src="images/droid0.png"><br />
-
 <button onClick="onoff()">on / off</button>
 
 <audio id="sound1" preload="auto">
@@ -106,23 +104,30 @@ var drop1_bucket = 0;
 var drop2_bucket = 1;
 var drop3_bucket = 2;
 
+var droid_image0 = new Image();
+droid_image0.src = "images/droid0.png";
+var droid_image1 = new Image();
+droid_image1.src = "images/droid1.png";
+var droid_image = droid_image0;
+
 function loop() {
   if (!sound_on) { return; }
 
   if (droid0.is_active(count)) {
-    var tempo = document.getElementById("tempo");
-    tempo.src = "images/droid0.png";
+    droid_image = droid_image0;
+    // droid_image.src = "images/droid0.png";
   }
   if (droid1.is_active(count)) {
-    var tempo = document.getElementById("tempo");
-    tempo.src = "images/droid1.png";
+    droid_image = droid_image1;
+    // droid_image.src = "images/droid1.png";
   }
+
+  draw(count);
 
   if (drop3.is_active(count)) { play(BUCKET_LIST[drop3_bucket].sound); }
   if (drop2.is_active(count)) { play(BUCKET_LIST[drop2_bucket].sound); }
   if (drop1.is_active(count)) { play(BUCKET_LIST[drop1_bucket].sound); }
 
-  draw(count);
   count += 1;
 }
 
@@ -156,6 +161,9 @@ function draw(count) {
   var canvas = document.getElementById("canvas");
   var context = canvas.getContext('2d');
   context.drawImage(background_img, 0, 0, canvas.width, canvas.height);
+  context.drawImage(droid_image,
+                    canvas.width - 48, canvas.height - 48,
+                    48, 48);
   //context.clearRect(0, 0, canvas.width, canvas.height);
 
   var ground_height = canvas.height * 0.9;
@@ -166,6 +174,10 @@ function draw(count) {
   draw_bucket(context, 160, ground_height + 20, BUCKET_LIST[drop1_bucket]);
   draw_bucket(context, 320, ground_height + 20, BUCKET_LIST[drop2_bucket]);
   draw_bucket(context, 480, ground_height + 20, BUCKET_LIST[drop3_bucket]);
+
+//  context.drawImage(droid_image,
+                    //canvas.width - 24, canvas.height - 24,
+                    //24, 24);
 }
 
 function isIn(clientX, clientY, x, y, width, height) {
