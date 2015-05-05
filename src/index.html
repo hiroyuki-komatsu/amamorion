@@ -1,8 +1,8 @@
-<button onClick="play('sound1')">1</button>
+<button onClick="set_sound('sound1')">1</button>
 <br/>
-<button onClick="play('sound2')">2</button>
+<button onClick="set_sound('sound2')">2</button>
 <br/>
-<button onClick="play('sound3')">3</button>
+<button onClick="set_sound('sound3')">3</button>
 <br/>
 <button onClick="onoff()">on / off</button>
 
@@ -24,6 +24,10 @@
 function play(audio_id) {
   document.getElementById(audio_id).currentTime = 0;
   document.getElementById(audio_id).play();
+}
+
+function set_sound(audio_id) {
+  drop1_sound = audio_id;
 }
 
 var sound_on = true;
@@ -86,6 +90,10 @@ var drop1 = new Tempo(random_tempo(15, 5), 0);
 var drop2 = new Tempo(random_tempo(20, 5), 5);
 var drop3 = new Tempo(random_tempo(30, 10), 10);
 
+var drop1_sound = 'sound1';
+var drop2_sound = 'sound2';
+var drop3_sound = 'sound3';
+
 function loop() {
   if (!sound_on) { return; }
 
@@ -98,9 +106,9 @@ function loop() {
     tempo.src = "images/droid1.png";
   }
 
-  if (drop3.is_active(count)) { play('sound3'); }
-  else if (drop2.is_active(count)) { play('sound2'); }
-  else if (drop1.is_active(count)) { play('sound1'); }
+  if (drop3.is_active(count)) { play(drop3_sound); }
+  else if (drop2.is_active(count)) { play(drop2_sound); }
+  else if (drop1.is_active(count)) { play(drop1_sound); }
 
   draw(count);
   count += 1;
@@ -124,6 +132,12 @@ function draw_drop(context, count, tempo, x, height) {
   }
 }
 
+function draw_bucket(context, x, y, color) {
+  context.beginPath();
+  context.fillStyle = color;
+  context.fillRect(x - 20, y - 20, 40, 20);
+}
+
 function draw(count) {
   var canvas = document.getElementById("canvas");
   var context = canvas.getContext('2d');
@@ -133,11 +147,36 @@ function draw(count) {
   draw_drop(context, count, drop2, 320, 320);
   draw_drop(context, count, drop3, 480, 320);
 
-  context.beginPath();
-  context.fillRect(140, 300, 40, 20);
-  context.fillRect(300, 300, 40, 20);
-  context.fillRect(460, 300, 40, 20);
+  draw_bucket(context, 160, 320, "#F44336");
+  draw_bucket(context, 320, 320, "#009688");
+  draw_bucket(context, 480, 320, "#3F51B5");
 }
+
+function isIn(clientX, clientY, x, y, width, height) {
+  return (x <= clientX && clientX <= x + width &&
+          y <= clientY && clientY <= y + height);
+}
+
+function onTouchEvent(event) {
+  var clientRect = event.target.getBoundingClientRect();
+  var touchX = event.clientX - clientRect.left;
+  var touchY = event.clientY - clientRect.top;
+
+  console.log("onTouchEvent: " + event.clientX + ", " + event.clientY);
+  console.log("onTouchEvent: " + touchX + ", " + touchY);
+
+  if (isIn(touchX, touchY, 140, 300, 40, 20)) {
+    drop1_sound = "sound3";
+  }
+  if (isIn(touchX, touchY, 300, 300, 40, 20)) {
+    drop2_sound = "sound1";
+  }
+  if (isIn(touchX, touchY, 460, 300, 40, 20)) {
+    drop3_sound = "sound2";
+  }
+}
+
+document.getElementById("canvas").addEventListener("click", onTouchEvent);
 
 setInterval(function() { loop(); }, INTERVAL_MS);
 
