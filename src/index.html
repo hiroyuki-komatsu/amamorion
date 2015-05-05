@@ -1,7 +1,5 @@
 <canvas id="canvas" width="640" height="480"></canvas>
 
-<button onClick="onoff()">on / off</button>
-
 <audio id="sound1" preload="auto">
   <source src="sounds/sound1.mp3" />
 </audio>
@@ -61,12 +59,12 @@ Bucket = function(sound, color, image_src) {
 }
 
 var BUCKET_LIST = [
-  new Bucket("sound1", "#F44336",  // Red
+  new Bucket("sound3", "#F44336",  // Red
              "images/dish_cup.png"),
+  new Bucket("sound1", "#3F51B5",  // Blue
+             "images/pot.png"),
   new Bucket("sound2", "#009688",  // Green
              "images/dish_owan.png"),
-  new Bucket("sound3", "#3F51B5",  // Blue
-             "images/pot.png")
 ]
 
 var INTERVAL_MS = 100;
@@ -200,6 +198,11 @@ function onTouchEvent(event) {
   }
   if (isIn(touchX, touchY, 440, bucket_y - 40, 80, 80)) {
     drop3_bucket = (drop3_bucket + 1) % BUCKET_LIST.length;
+  }
+
+  if (isIn(touchX, touchY,
+           clientRect.right - 48, clientRect.bottom - 48, 48, 48)) {
+    onoff();
   }
 }
 
