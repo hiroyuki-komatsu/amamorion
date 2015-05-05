@@ -42,14 +42,27 @@ Tempo.prototype.is_active = function(count) {
   return (count + this.offset) % this.step == 0;
 }
 
+// Returns lists of incoming tempo in ascending order in [0, 100)
+// 99 is the max. e.g. [0, 25, 50, 75]
+Tempo.prototype.get_sequence = function(count) {
+  var mod = (count + this.offset) % this.step;
+  var offset = (mod == 0) ? 0 : this.step - mod;
+
+  var sequence = [];
+  for (var val = offset; val < 100; val += this.step) {
+    sequence.push(val);
+  }
+  return sequence;
+}
+
 var interval_ms = 100;
 var count = 0;
 var droid0 = new Tempo(20, 0);
 var droid1 = new Tempo(20, 10);
 
 var sound1 = new Tempo(10, 0);
-var sound2 = new Tempo(40, 0);
-var sound3 = new Tempo(80, 0);
+var sound2 = new Tempo(10, 5);
+var sound3 = new Tempo(20, 0);
 
 function loop() {
   if (!sound_on) { return; }
@@ -76,9 +89,31 @@ function draw(count) {
   var canvas = document.getElementById("canvas");
   var context = canvas.getContext('2d');
   context.clearRect(0, 0, canvas.width, canvas.height);
-  context.beginPath();
-  context.arc(320, 32 * step, 30, Math.PI*2, false);
-  context.stroke();
+
+  // sound1
+  var sequence = sound1.get_sequence(count);
+  for (var i = 0; i < sequence.length; ++i) {
+    context.beginPath();
+    context.arc(160, 320 - 3 * sequence[i], 10, Math.PI*2, false);
+    context.stroke();
+  }
+
+  // sound2
+  sequence = sound2.get_sequence(count);
+  for (var i = 0; i < sequence.length; ++i) {
+    context.beginPath();
+    context.arc(320, 320 - 3 * sequence[i], 10, Math.PI*2, false);
+    context.stroke();
+  }
+
+  // sound3
+  sequence = sound3.get_sequence(count);
+  for (var i = 0; i < sequence.length; ++i) {
+    context.beginPath();
+    context.arc(480, 320 - 3 * sequence[i], 10, Math.PI*2, false);
+    context.stroke();
+  }
+
 }
 
 setInterval(function() { loop(); }, interval_ms);
