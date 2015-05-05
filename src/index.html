@@ -51,22 +51,36 @@ Tempo.prototype.get_sequence = function(count) {
 }
 
 // Bucket class
-Bucket = function(sound, color, image_src) {
+Bucket = function(sound, image_src) {
   this.sound = sound;
-  this.color = color;
   this.image = new Image();
   this.image.src = image_src;
 }
 
 var BUCKET_LIST = [
-  new Bucket("sound3", "#F44336",  // Red
-             "images/dish_cup.png"),
-  new Bucket("sound1", "#3F51B5",  // Blue
-             "images/pot.png"),
-  new Bucket("sound2", "#009688",  // Green
-             "images/dish_owan.png"),
+  new Bucket("sound3", "images/dish_cup.png"),
+  new Bucket("sound1", "images/pot.png"),
+  new Bucket("sound2", "images/dish_owan.png"),
 ]
 
+// Canvas Object class
+CanvasObject = function(x, y, width, height) {
+  this.x = x;
+  this.y = y;
+  this.width = width;
+  this.height = height;
+}
+
+CanvasObject.prototype.isInside = function(x, y) {
+  return (this.x <= x && x <= this.x + this.width &&
+          this.y <= y && y <= this.y + this.height);
+}
+
+CanvasObject.prototype.drawImage = function(context, image) {
+  context.drawImage(image, this.x, this.y, this.width, this.height);
+}
+
+// Const values
 var INTERVAL_MS = 100;
 var GRAVITY = 9.8;  // meter / sec^2
 var FIELD_HEIGHT = 20;  // meter
@@ -102,22 +116,37 @@ var drop1_bucket = 0;
 var drop2_bucket = 1;
 var drop3_bucket = 2;
 
+// Image resources
 var droid_image0 = new Image();
 droid_image0.src = "images/droid0.png";
 var droid_image1 = new Image();
 droid_image1.src = "images/droid1.png";
 var droid_image = droid_image0;
 
+var drop_image = new Image();
+drop_image.src = "images/water_shizuku.png";
+
+var background_img = new Image();
+background_img.src = "images/background.png";
+
+// Canvas and canvas objects.
+var canvas = document.getElementById("canvas");
+var bucket_y = canvas.height * 0.9 - 40;
+var obj_size = 60;
+var bucket1 = new CanvasObject(160 - obj_size/2, bucket_y, obj_size, obj_size);
+var bucket2 = new CanvasObject(320 - obj_size/2, bucket_y, obj_size, obj_size);
+var bucket3 = new CanvasObject(480 - obj_size/2, bucket_y, obj_size, obj_size);
+var droid = new CanvasObject(canvas.width - 48, canvas.height - 48, 48, 48);
+
+
 function loop() {
   if (!sound_on) { return; }
 
   if (droid0.is_active(count)) {
     droid_image = droid_image0;
-    // droid_image.src = "images/droid0.png";
   }
   if (droid1.is_active(count)) {
     droid_image = droid_image1;
-    // droid_image.src = "images/droid1.png";
   }
 
   draw(count);
@@ -128,9 +157,6 @@ function loop() {
 
   count += 1;
 }
-
-var drop_image = new Image();
-drop_image.src = "images/water_shizuku.png";
 
 function draw_drop(context, count, tempo, x, height) {
   var sequence = tempo.get_sequence(count);
@@ -148,39 +174,20 @@ function draw_drop(context, count, tempo, x, height) {
   }
 }
 
-function draw_bucket(context, x, y, bucket) {
-  context.drawImage(bucket.image, x - 30, y - 60, 60, 60);
-}
-
-var background_img = new Image();
-background_img.src = "images/background.png";
-
 function draw(count) {
   var canvas = document.getElementById("canvas");
   var context = canvas.getContext('2d');
   context.drawImage(background_img, 0, 0, canvas.width, canvas.height);
-  context.drawImage(droid_image,
-                    canvas.width - 48, canvas.height - 48,
-                    48, 48);
-  //context.clearRect(0, 0, canvas.width, canvas.height);
+  droid.drawImage(context, droid_image);
 
   var ground_height = canvas.height * 0.9;
   draw_drop(context, count, drop1, 160, ground_height);
   draw_drop(context, count, drop2, 320, ground_height);
   draw_drop(context, count, drop3, 480, ground_height);
 
-  draw_bucket(context, 160, ground_height + 20, BUCKET_LIST[drop1_bucket]);
-  draw_bucket(context, 320, ground_height + 20, BUCKET_LIST[drop2_bucket]);
-  draw_bucket(context, 480, ground_height + 20, BUCKET_LIST[drop3_bucket]);
-
-//  context.drawImage(droid_image,
-                    //canvas.width - 24, canvas.height - 24,
-                    //24, 24);
-}
-
-function isIn(clientX, clientY, x, y, width, height) {
-  return (x <= clientX && clientX <= x + width &&
-          y <= clientY && clientY <= y + height);
+  bucket1.drawImage(context, BUCKET_LIST[drop1_bucket].image);
+  bucket2.drawImage(context, BUCKET_LIST[drop2_bucket].image);
+  bucket3.drawImage(context, BUCKET_LIST[drop3_bucket].image);
 }
 
 function onTouchEvent(event) {
@@ -188,26 +195,23 @@ function onTouchEvent(event) {
   var touchX = event.clientX - clientRect.left;
   var touchY = event.clientY - clientRect.top;
 
-  var bucket_y = clientRect.height * 0.9 + 20;
-
-  if (isIn(touchX, touchY, 120, bucket_y - 40, 80, 80)) {
+  if (bucket1.isInside(touchX, touchY)) {
     drop1_bucket = (drop1_bucket + 1) % BUCKET_LIST.length;
   }
-  if (isIn(touchX, touchY, 280, bucket_y - 40, 80, 80)) {
+  if (bucket2.isInside(touchX, touchY)) {
     drop2_bucket = (drop2_bucket + 1) % BUCKET_LIST.length;
   }
-  if (isIn(touchX, touchY, 440, bucket_y - 40, 80, 80)) {
+  if (bucket3.isInside(touchX, touchY)) {
     drop3_bucket = (drop3_bucket + 1) % BUCKET_LIST.length;
   }
 
-  if (isIn(touchX, touchY,
-           clientRect.right - 48, clientRect.bottom - 48, 48, 48)) {
+  if (droid.isInside(touchX, touchY)) {
     onoff();
   }
 }
 
-document.getElementById("canvas").addEventListener("click", onTouchEvent);
 
+canvas.addEventListener("click", onTouchEvent);
 setInterval(function() { loop(); }, INTERVAL_MS);
 
 </script>
